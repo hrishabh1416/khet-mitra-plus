@@ -19,7 +19,28 @@ const DiseaseDetection = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageCapture = () => {
-    fileInputRef.current?.click();
+    // Try to open camera directly
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      })
+      .then(stream => {
+        // Create a video element to capture the camera stream
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+        
+        // For now, fall back to file input - in production, you'd implement camera capture UI
+        stream.getTracks().forEach(track => track.stop());
+        fileInputRef.current?.click();
+      })
+      .catch(() => {
+        // Fallback to file input
+        fileInputRef.current?.click();
+      });
+    } else {
+      fileInputRef.current?.click();
+    }
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

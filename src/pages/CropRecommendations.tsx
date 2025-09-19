@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Leaf, TrendingUp, Clock, DollarSign, Award } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Leaf, TrendingUp, Clock, DollarSign, Award, Sprout } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface CropRecommendation {
@@ -140,68 +141,103 @@ const CropRecommendations = () => {
           </div>
         </div>
 
-        {/* Input Form */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Select Your Farming Conditions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Soil Type</label>
-                <Select value={selectedSoil} onValueChange={setSelectedSoil}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select soil type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {soilTypes.map((soil) => (
-                      <SelectItem key={soil.value} value={soil.value}>
-                        {soil.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Season</label>
-                <Select value={selectedSeason} onValueChange={setSelectedSeason}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select season" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {seasons.map((season) => (
-                      <SelectItem key={season.value} value={season.value}>
-                        {season.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-end">
+        {/* Tabs for Different Modes */}
+        <Tabs defaultValue="new-crop" className="mb-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="new-crop" className="flex items-center space-x-2">
+              <Leaf className="w-4 h-4" />
+              <span>Find New Crops</span>
+            </TabsTrigger>
+            <TabsTrigger value="track-crop" className="flex items-center space-x-2">
+              <Sprout className="w-4 h-4" />
+              <span>Track Current Crop</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="new-crop">
+            <Card>
+              <CardHeader>
+                <CardTitle>Select Your Farming Conditions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Soil Type</label>
+                    <Select value={selectedSoil} onValueChange={setSelectedSoil}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select soil type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {soilTypes.map((soil) => (
+                          <SelectItem key={soil.value} value={soil.value}>
+                            {soil.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Season</label>
+                    <Select value={selectedSeason} onValueChange={setSelectedSeason}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select season" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {seasons.map((season) => (
+                          <SelectItem key={season.value} value={season.value}>
+                            {season.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-end">
+                    <Button 
+                      onClick={getRecommendations}
+                      disabled={!selectedSoil || !selectedSeason || isLoading}
+                      className="w-full"
+                      variant="success"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <TrendingUp className="w-4 h-4 mr-2" />
+                          Get Recommendations
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="track-crop">
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Sprout className="w-16 h-16 mx-auto mb-4 text-farming-leaf" />
+                <h3 className="text-xl font-semibold mb-2">Track Your Growing Crop</h3>
+                <p className="text-muted-foreground mb-6">
+                  Get personalized care recommendations based on your crop's current growth stage, weather conditions, and soil health.
+                </p>
                 <Button 
-                  onClick={getRecommendations}
-                  disabled={!selectedSoil || !selectedSeason || isLoading}
-                  className="w-full"
+                  onClick={() => navigate('/crop-progress')}
+                  className="w-full max-w-sm"
                   variant="success"
                 >
-                  {isLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      Get Recommendations
-                    </>
-                  )}
+                  <Sprout className="w-4 h-4 mr-2" />
+                  Start Crop Tracking
                 </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {/* Results */}
         {recommendations.length > 0 && (

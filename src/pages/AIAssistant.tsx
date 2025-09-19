@@ -2,7 +2,8 @@ import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Bot, Mic, MicOff, Send, User } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Bot, Mic, MicOff, Send, User, Languages } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Message {
@@ -14,6 +15,7 @@ interface Message {
 
 const AIAssistant = () => {
   const navigate = useNavigate();
+  const [selectedLanguage, setSelectedLanguage] = useState('english');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -26,6 +28,16 @@ const AIAssistant = () => {
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const languages = [
+    { value: 'english', label: 'English' },
+    { value: 'hindi', label: 'हिंदी (Hindi)' },
+    { value: 'marathi', label: 'मराठी (Marathi)' },
+    { value: 'gujarati', label: 'ગુજરાતી (Gujarati)' },
+    { value: 'punjabi', label: 'ਪੰਜਾਬੀ (Punjabi)' },
+    { value: 'tamil', label: 'தமிழ் (Tamil)' },
+    { value: 'telugu', label: 'తెలుగు (Telugu)' },
+  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -126,7 +138,24 @@ const AIAssistant = () => {
         {/* Chat Container */}
         <Card className="h-[600px] flex flex-col">
           <CardHeader className="border-b">
-            <CardTitle className="text-lg">Chat with AI Assistant</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Chat with AI Assistant</CardTitle>
+              <div className="flex items-center space-x-2">
+                <Languages className="w-4 h-4 text-muted-foreground" />
+                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {languages.map((lang) => (
+                      <SelectItem key={lang.value} value={lang.value}>
+                        {lang.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           
           {/* Messages Area */}

@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import AIAssistant from "./pages/AIAssistant";
 import DiseaseDetection from "./pages/DiseaseDetection";
 import CropRecommendations from "./pages/CropRecommendations";
+import CropProgress from "./pages/CropProgress";
 import MarketPrices from "./pages/MarketPrices";
 import NotFound from "./pages/NotFound";
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/ai-assistant" element={<AIAssistant />} />
           <Route path="/disease-diagnosis" element={<DiseaseDetection />} />
           <Route path="/crop-recommendations" element={<CropRecommendations />} />
+          <Route path="/crop-progress" element={<CropProgress />} />
           <Route path="/market-prices" element={<MarketPrices />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
