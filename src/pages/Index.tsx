@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Landing from '@/components/Landing';
 import Dashboard from '@/components/Dashboard';
-
+import 'leaflet/dist/leaflet.css';
 const Index = () => {
   const navigate = useNavigate();
   const [showDashboard, setShowDashboard] = useState(false);

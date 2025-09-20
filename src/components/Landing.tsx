@@ -26,7 +26,7 @@ const Landing = ({ onGetStarted }: LandingProps) => {
         <div className={`mb-8 transition-all duration-1000 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
           <div className="flex items-center justify-center mb-4">
             <Leaf className="w-12 h-12 text-primary mr-3" />
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent text-white">
               KrishiMitra
             </h1>
           </div>
