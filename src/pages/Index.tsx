@@ -25,6 +25,12 @@ const Index = () => {
       case 'market-prices':
         navigate('/market-prices');
         break;
+      case 'equipment-rental':
+        navigate('/equipment-rental');
+        break;
+      case 'analytics':
+        navigate('/analytics');
+        break;
       default:
         break;
     }

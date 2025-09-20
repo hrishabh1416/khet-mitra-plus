@@ -8,7 +8,9 @@ import {
   Bot,
   Camera,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Tractor,
+  BarChart3
 } from 'lucide-react';
 import LocationSelector from './LocationSelector';
 import WeatherWidget from './WeatherWidget';
@@ -90,7 +92,7 @@ const Dashboard = ({ onFeatureClick }: DashboardProps) => {
         <WeatherWidget onWeatherUpdate={handleWeatherUpdate} />
 
         {/* Main Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           {/* AI Assistant */}
           <Card 
@@ -146,15 +148,51 @@ const Dashboard = ({ onFeatureClick }: DashboardProps) => {
             </CardContent>
           </Card>
 
-          {/* Market Prices */}
+          {/* Equipment Rental */}
           <Card 
             className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 animate-fade-in"
             style={{ animationDelay: '1000ms' }}
-            onClick={() => onFeatureClick('market-prices')}
+            onClick={() => onFeatureClick('equipment-rental')}
           >
             <CardContent className="p-6 text-center">
               <div className="w-16 h-16 bg-warning/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ShoppingCart className="w-8 h-8 text-warning" />
+                <Tractor className="w-8 h-8 text-warning" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Equipment Rental</h3>
+              <p className="text-sm text-muted-foreground">Rent farming equipment near you</p>
+              <Button variant="ghost" size="sm" className="mt-4 w-full">
+                Browse Equipment
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Analytics */}
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 animate-fade-in"
+            style={{ animationDelay: '1200ms' }}
+            onClick={() => onFeatureClick('analytics')}
+          >
+            <CardContent className="p-6 text-center">
+              <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Financial Analytics</h3>
+              <p className="text-sm text-muted-foreground">Track spending, earnings and profit</p>
+              <Button variant="ghost" size="sm" className="mt-4 w-full">
+                View Analytics
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Market Prices */}
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 animate-fade-in"
+            style={{ animationDelay: '1400ms' }}
+            onClick={() => onFeatureClick('market-prices')}
+          >
+            <CardContent className="p-6 text-center">
+              <div className="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ShoppingCart className="w-8 h-8 text-success" />
               </div>
               <h3 className="text-lg font-semibold mb-2">Market Prices</h3>
               <p className="text-sm text-muted-foreground">Live mandi prices and trends</p>
@@ -166,7 +204,7 @@ const Dashboard = ({ onFeatureClick }: DashboardProps) => {
         </div>
 
         {/* Quick Market Overview */}
-        <Card className="animate-slide-up" style={{ animationDelay: '1200ms' }}>
+        <Card className="animate-slide-up" style={{ animationDelay: '1600ms' }}>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <TrendingUp className="w-5 h-5 text-success" />
