@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -19,6 +19,35 @@ interface DashboardProps {
 
 const Dashboard = ({ onFeatureClick }: DashboardProps) => {
   const [locationData, setLocationData] = useState<{lat: number, lng: number, address: string} | null>(null);
+  const [weatherAlert, setWeatherAlert] = useState<{ title: string; message: string } | null>(null);
+
+  const handleWeatherUpdate = (weather: { condition: string; description: string }) => {
+    const cond = weather.condition.toLowerCase();
+
+    if (cond.includes("rain")) {
+      setWeatherAlert({
+        title: "Rain Alert",
+        message: "Ensure proper drainage and cover harvested produce."
+      });
+    } else if (cond.includes("wind")) {
+      setWeatherAlert({
+        title: "High Wind Alert",
+        message: "Secure loose equipment and crop supports."
+      });
+    } else if (cond.includes("heat") || cond.includes("clear")) {
+      setWeatherAlert({
+        title: "Heat Alert",
+        message: "Irrigate crops adequately and provide shade where possible."
+      });
+    } else if (cond.includes("cloud")) {
+      setWeatherAlert({
+        title: "Cloudy Weather",
+        message: "Monitor humidity, possible risk of fungal diseases."
+      });
+    } else {
+      setWeatherAlert(null);
+    }
+  };
 
   const marketPrices = [
     { crop: 'Soybean', price: '₹4500', trend: 'up', change: '+2%' },
@@ -42,21 +71,23 @@ const Dashboard = ({ onFeatureClick }: DashboardProps) => {
           />
         </div>
 
-        {/* Weather Alert */}
-        <Card className="bg-gradient-to-r from-warning/10 to-warning/5 border-warning/20 animate-fade-in">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <AlertTriangle className="w-6 h-6 text-warning" />
-              <div>
-                <p className="font-medium text-foreground">Weather Alert: High winds expected</p>
-                <p className="text-sm text-muted-foreground">Secure loose equipment and check crop supports</p>
+        {/* Weather Alert (Dynamic) */}
+        {weatherAlert && (
+          <Card className="bg-gradient-to-r from-warning/10 to-warning/5 border-warning/20 animate-fade-in">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <AlertTriangle className="w-6 h-6 text-warning" />
+                <div>
+                  <p className="font-medium text-foreground">Weather Alert: {weatherAlert.title}</p>
+                  <p className="text-sm text-muted-foreground">{weatherAlert.message}</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Weather Summary */}
-        <WeatherWidget />
+        <WeatherWidget onWeatherUpdate={handleWeatherUpdate} />
 
         {/* Main Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
