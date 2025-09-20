@@ -10,6 +10,8 @@ import DiseaseDetection from "./pages/DiseaseDetection";
 import CropRecommendations from "./pages/CropRecommendations";
 import CropProgress from "./pages/CropProgress";
 import MarketPrices from "./pages/MarketPrices";
+import EquipmentRental from "./pages/EquipmentRental";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
         <Route path="/crop-recommendations" element={<CropRecommendations />} />
         <Route path="/crop-progress" element={<CropProgress />} />
         <Route path="/market-prices" element={<MarketPrices />} />
+        <Route path="/equipment-rental" element={<EquipmentRental />} />
+        <Route path="/analytics" element={<Analytics />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </TooltipProvider>
