@@ -29,7 +29,7 @@ const MarketPrices = () => {
   const [selectedMandi, setSelectedMandi] = useState('indore');
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+  const API_KEY = import.meta.env.VITE_AGMARKNET_API_KEY;  
   const [marketData, setMarketData] = useState<MarketPrice[]>([
     {
       crop: 'Soybean',
@@ -385,3 +385,236 @@ const MarketPrices = () => {
 };
 
 export default MarketPrices;
+// import { useState, useEffect } from 'react';
+// import { Button } from '@/components/ui/button';
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// import { 
+//   ArrowLeft, 
+//   TrendingUp, 
+//   TrendingDown, 
+//   RefreshCw,
+//   MapPin,
+//   Calendar,
+//   ShoppingCart
+// } from 'lucide-react';
+// import { useNavigate } from 'react-router-dom';
+
+// interface MarketPrice {
+//   crop: string;
+//   price: string;
+//   unit: string;
+//   trend: 'up' | 'down' | 'stable';
+//   change: string;
+//   lastUpdated: string;
+//   minPrice: string;
+//   maxPrice: string;
+// }
+
+// const MarketPrices = () => {
+//   const navigate = useNavigate();
+//   const [selectedMandi, setSelectedMandi] = useState('indore');
+//   const [lastUpdated, setLastUpdated] = useState(new Date());
+//   const [isRefreshing, setIsRefreshing] = useState(false);
+//   const API_KEY = import.meta.env.VITE_AGMARKNET_API_KEY;
+//   const [marketData, setMarketData] = useState<MarketPrice[]>([]);
+
+//   const mandis = [
+//     { value: 'Indore', label: 'Indore, Madhya Pradesh' },
+//     { value: 'Bhopal', label: 'Bhopal, Madhya Pradesh' },
+//     { value: 'Dewas', label: 'Dewas, Madhya Pradesh' },
+//     { value: 'Ujjain', label: 'Ujjain, Madhya Pradesh' },
+//     { value: 'Khandwa', label: 'Khandwa, Madhya Pradesh' }
+//   ];
+
+//   // 🔹 Fetch data from Agmarknet
+//   const fetchMarketPrices = async () => {
+//     try {
+//       setIsRefreshing(true);
+//       const res = await fetch(
+//         `https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?api-key=${API_KEY}&format=json&filters[market]=${selectedMandi}`
+//       );
+//       const data = await res.json();
+
+//       // Map API response to MarketPrice interface
+//       const formattedData: MarketPrice[] = data.records.map((item: any) => ({
+//         crop: item.commodity,
+//         price: item.modal_price,
+//         unit: "quintal", // Agmarknet prices are usually per quintal
+//         trend: "stable", // you can calculate trend based on prev data
+//         change: "0%",   // placeholder unless trend logic is added
+//         lastUpdated: item.arrival_date,
+//         minPrice: item.min_price,
+//         maxPrice: item.max_price
+//       }));
+
+//       setMarketData(formattedData);
+//       setLastUpdated(new Date());
+//     } catch (err) {
+//       console.error("Error fetching market prices:", err);
+//     } finally {
+//       setIsRefreshing(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchMarketPrices();
+//   }, [selectedMandi]);
+
+//   const getTrendIcon = (trend: string) => {
+//     switch (trend) {
+//       case 'up':
+//         return <TrendingUp className="w-4 h-4 text-success" />;
+//       case 'down':
+//         return <TrendingDown className="w-4 h-4 text-destructive" />;
+//       default:
+//         return <div className="w-4 h-4 rounded-full bg-muted-foreground"></div>;
+//     }
+//   };
+
+//   const getTrendColor = (trend: string) => {
+//     switch (trend) {
+//       case 'up':
+//         return 'text-success';
+//       case 'down':
+//         return 'text-destructive';
+//       default:
+//         return 'text-muted-foreground';
+//     }
+//   };
+
+//   const getHighestGainers = () => {
+//     return marketData
+//       .filter(item => item.trend === 'up')
+//       .sort((a, b) => parseFloat(b.change.replace('%', '')) - parseFloat(a.change.replace('%', '')))
+//       .slice(0, 3);
+//   };
+
+//   const getHighestLosers = () => {
+//     return marketData
+//       .filter(item => item.trend === 'down')
+//       .sort((a, b) => parseFloat(a.change.replace('%', '')) - parseFloat(b.change.replace('%', '')))
+//       .slice(0, 3);
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-muted/30 to-farming-earth/20 p-4">
+//       <div className="max-w-6xl mx-auto">
+        
+//         {/* Header */}
+//         <div className="flex items-center mb-6">
+//           <Button
+//             variant="ghost"
+//             size="sm"
+//             onClick={() => navigate('/')}
+//             className="mr-4"
+//           >
+//             <ArrowLeft className="w-4 h-4 mr-2" />
+//             Back
+//           </Button>
+//           <div className="flex items-center space-x-3">
+//             <div className="w-10 h-10 bg-warning/20 rounded-full flex items-center justify-center">
+//               <ShoppingCart className="w-6 h-6 text-warning" />
+//             </div>
+//             <div>
+//               <h1 className="text-2xl font-bold text-foreground">Mandi Prices</h1>
+//               <p className="text-sm text-muted-foreground">Live market rates and trends</p>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Controls */}
+//         <Card className="mb-6">
+//           <CardContent className="p-4">
+//             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+//               <div className="flex items-center space-x-4">
+//                 <div className="flex items-center space-x-2">
+//                   <MapPin className="w-4 h-4 text-muted-foreground" />
+//                   <Select value={selectedMandi} onValueChange={setSelectedMandi}>
+//                     <SelectTrigger className="w-64">
+//                       <SelectValue />
+//                     </SelectTrigger>
+//                     <SelectContent>
+//                       {mandis.map((mandi) => (
+//                         <SelectItem key={mandi.value} value={mandi.value}>
+//                           {mandi.label}
+//                         </SelectItem>
+//                       ))}
+//                     </SelectContent>
+//                   </Select>
+//                 </div>
+//               </div>
+              
+//               <div className="flex items-center space-x-4">
+//                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+//                   <Calendar className="w-4 h-4" />
+//                   <span>Updated: {lastUpdated.toLocaleTimeString()}</span>
+//                 </div>
+//                 <Button
+//                   variant="outline"
+//                   size="sm"
+//                   onClick={fetchMarketPrices}
+//                   disabled={isRefreshing}
+//                 >
+//                   <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+//                   Refresh
+//                 </Button>
+//               </div>
+//             </div>
+//           </CardContent>
+//         </Card>
+
+//         {/* Market Summary Cards */}
+//         {/* ... keep your summary + tips sections the same, using updated marketData ... */}
+
+//         {/* Price List */}
+//         <Card>
+//           <CardHeader>
+//             <CardTitle className="flex items-center space-x-2">
+//               <ShoppingCart className="w-5 h-5" />
+//               <span>Today's Prices - {mandis.find(m => m.value === selectedMandi)?.label}</span>
+//             </CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="space-y-2">
+//               {marketData.length === 0 ? (
+//                 <p className="text-muted-foreground">No data available for this mandi.</p>
+//               ) : (
+//                 marketData.map((item, index) => (
+//                   <div
+//                     key={index}
+//                     className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+//                   >
+//                     <div>
+//                       <h3 className="font-semibold text-lg">{item.crop}</h3>
+//                       <p className="text-sm text-muted-foreground">Updated {item.lastUpdated}</p>
+//                     </div>
+//                     <div className="text-right">
+//                       <div className="flex items-center space-x-3">
+//                         <div>
+//                           <p className="text-2xl font-bold text-primary">₹{item.price}</p>
+//                           <p className="text-sm text-muted-foreground">per {item.unit}</p>
+//                         </div>
+//                         <div className="flex items-center space-x-2">
+//                           {getTrendIcon(item.trend)}
+//                           <span className={`text-sm font-medium ${getTrendColor(item.trend)}`}>
+//                             {item.change}
+//                           </span>
+//                         </div>
+//                       </div>
+//                       <p className="text-xs text-muted-foreground mt-1">
+//                         Range: ₹{item.minPrice} - ₹{item.maxPrice}
+//                       </p>
+//                     </div>
+//                   </div>
+//                 ))
+//               )}
+//             </div>
+//           </CardContent>
+//         </Card>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default MarketPrices;
