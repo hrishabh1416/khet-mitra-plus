@@ -38,6 +38,9 @@ interface Message {
 }
 
 function App() {
+  // inputMode tracks how input was given: 'text' or 'voice'
+  const [inputMode, setInputMode] = useState<'text' | 'voice'>('text');
+
   const [selectedLanguage, setSelectedLanguage] = useState('english');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -117,6 +120,7 @@ function App() {
       recognitionRef.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         setInputMessage(transcript);
+        setInputMode('voice'); // mark that input came from voice
         recognitionRef.current?.stop();
       };
 
@@ -175,6 +179,12 @@ function App() {
     }
   };
 
+  // Handle input text change, set inputMode to text
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputMessage(e.target.value);
+    setInputMode('text');
+  };
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
@@ -231,7 +241,7 @@ function App() {
       const systemPrompt = `You are an AI assistant named "AI Krishi Sahayak" that provides personalized farming advice. You are knowledgeable about crops, soil, weather, irrigation, equipment, disease detection, and market prices in India. Respond to the user's queries in ${selectedLanguage}. Use the following farmerDetails object to provide advice:
 
       ${JSON.stringify(farmer)}
-      
+
       Provide concise, clear, and polite advice (2–3 sentences) while giving practical, in-depth guidance tailored to this farmer’s specific farm, soil, crops, and location.
       `;
 
@@ -262,10 +272,17 @@ function App() {
         sender: 'ai',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, aiResponse]);
 
-      // Speak AI response aloud
-      speakText(aiResponseText);
+      // If input was voice, only speak response (no text output)
+      if (inputMode === 'voice') {
+        speakText(aiResponseText);
+      } else {
+        // For text input, show response in text only (no speech)
+        setMessages(prev => [...prev, aiResponse]);
+      }
+
+      // Reset input mode back to text after response
+      setInputMode('text');
 
     } catch (error) {
       console.error('Error fetching AI response:', error);
@@ -275,8 +292,9 @@ function App() {
         sender: 'ai',
         timestamp: new Date()
       };
+      // Show error in text always
       setMessages(prev => [...prev, errorMessage]);
-      speakText(errorMessage.content);
+      setInputMode('text');
     } finally {
       setIsLoading(false);
     }
@@ -290,7 +308,7 @@ function App() {
       return;
     }
 
-    // If speech synthesis is speaking, stop speech and return early
+    // Stop speech synthesis if currently speaking
     if (window.speechSynthesis.speaking) {
       window.speechSynthesis.cancel();
       speechSynthesisRef.current = null;
@@ -305,8 +323,7 @@ function App() {
   };
 
   const handleGoBack = () => {
-    // Placeholder for navigation
-    console.log("Navigating back...");
+    window.history.back();
   };
 
   return (
@@ -428,7 +445,7 @@ function App() {
                 <Input
                   placeholder="Ask about crops, weather, diseases, or farming tips..."
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
+                  onChange={handleInputChange}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   className="flex-1 rounded-full border-green-300 focus:border-green-500 transition-colors"
                 />
@@ -476,3 +493,4 @@ function App() {
 }
 
 export default App;
+
