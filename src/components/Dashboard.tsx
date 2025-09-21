@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -22,6 +22,7 @@ interface DashboardProps {
 const Dashboard = ({ onFeatureClick }: DashboardProps) => {
   const [locationData, setLocationData] = useState<{lat: number, lng: number, address: string} | null>(null);
   const [weatherAlert, setWeatherAlert] = useState<{ title: string; message: string } | null>(null);
+  const [location, setLocation] = useState({ latitude: null, longitude: null, error: null });
 
   const handleWeatherUpdate = (weather: { condition: string; description: string }) => {
     const cond = weather.condition.toLowerCase();
@@ -56,6 +57,29 @@ const Dashboard = ({ onFeatureClick }: DashboardProps) => {
     { crop: 'Wheat', price: '₹2200', trend: 'up', change: '+1%' },
     { crop: 'Cotton', price: '₹5800', trend: 'down', change: '-3%' },
   ];
+
+  const getLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            error: null,
+          });
+        },
+        (error) => {
+          setLocation({ latitude: null, longitude: null, error: error.message });
+        }
+      );
+    } else {
+      setLocation({ latitude: null, longitude: null, error: "Geolocation not supported" });
+    }
+  };
+
+  useEffect(()=>{
+    getLocation();
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/30 to-farming-earth/20 p-4">

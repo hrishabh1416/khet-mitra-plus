@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
+import {
   ArrowLeft,
   TrendingUp,
   TrendingDown,
@@ -17,37 +17,132 @@ import {
   BarChart3
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+const fullYearData = [
+  { month: 'Jan', spending: 45000, earnings: 65000 },
+  { month: 'Feb', spending: 52000, earnings: 58000 },
+  { month: 'Mar', spending: 38000, earnings: 72000 },
+  { month: 'Apr', spending: 47000, earnings: 69000 },
+  { month: 'May', spending: 55000, earnings: 48000 },
+  { month: 'Jun', spending: 41000, earnings: 78000 },
+  { month: 'Jul', spending: 46000, earnings: 72000 },
+  { month: 'Aug', spending: 48000, earnings: 75000 },
+  { month: 'Sep', spending: 53000, earnings: 78000 },
+  { month: 'Oct', spending: 49000, earnings: 70000 },
+  { month: 'Nov', spending: 47000, earnings: 68000 },
+  { month: 'Dec', spending: 52000, earnings: 73000 },
+];
+
+const initialExpenseBreakdown = [
+  { name: 'Seeds & Fertilizers', amount: 85000 },
+  { name: 'Equipment Rental', amount: 60000 },
+  { name: 'Labor', amount: 48000 },
+  { name: 'Irrigation', amount: 29000 },
+  { name: 'Others', amount: 19000 },
+];
+
+const periodMonthsMap = {
+  '3months': 3,
+  '6months': 6,
+  '1year': 12,
+};
+
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--farming-leaf))', 'hsl(var(--warning))', 'hsl(var(--success))', 'hsl(var(--muted))'];
 
 const Analytics = () => {
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState('6months');
 
-  // Dummy financial data
-  const monthlyData = [
-    { month: 'Jan', spending: 45000, earnings: 65000, profit: 20000 },
-    { month: 'Feb', spending: 52000, earnings: 58000, profit: 6000 },
-    { month: 'Mar', spending: 38000, earnings: 72000, profit: 34000 },
-    { month: 'Apr', spending: 47000, earnings: 69000, profit: 22000 },
-    { month: 'May', spending: 55000, earnings: 48000, profit: -7000 },
-    { month: 'Jun', spending: 41000, earnings: 78000, profit: 37000 }
-  ];
+  // Monthly earning/spending with profit per month
+  const [monthlyData, setMonthlyData] = useState(() => {
+    return fullYearData.slice(0, periodMonthsMap['6months']).map(m => ({
+      ...m,
+      profit: m.earnings - m.spending,
+    }));
+  });
 
-  const expenseBreakdown = [
-    { name: 'Seeds & Fertilizers', value: 35, amount: 85000 },
-    { name: 'Equipment Rental', value: 25, amount: 60000 },
-    { name: 'Labor', value: 20, amount: 48000 },
-    { name: 'Irrigation', value: 12, amount: 29000 },
-    { name: 'Others', value: 8, amount: 19000 }
-  ];
+  // Editable expense categories with amounts
+  const [expenseBreakdown, setExpenseBreakdown] = useState(() => {
+    const total = initialExpenseBreakdown.reduce((sum, i) => sum + i.amount, 0);
+    return initialExpenseBreakdown.map(item => ({
+      ...item,
+      value: (item.amount / total) * 100,
+    }));
+  });
 
-  const COLORS = ['hsl(var(--primary))', 'hsl(var(--farming-leaf))', 'hsl(var(--warning))', 'hsl(var(--success))', 'hsl(var(--muted))'];
+  // Add new expense inputs
+  const [newExpenseName, setNewExpenseName] = useState('');
+  const [newExpenseAmount, setNewExpenseAmount] = useState('');
 
-  const totalSpending = monthlyData.reduce((sum, item) => sum + item.spending, 0);
+  // Update monthly data on period change
+  useEffect(() => {
+    const monthsCount = periodMonthsMap[selectedPeriod];
+    const slicedData = fullYearData.slice(0, monthsCount).map(m => ({
+      ...m,
+      profit: m.earnings - m.spending,
+    }));
+    setMonthlyData(slicedData);
+  }, [selectedPeriod]);
+
+  // Handle editable spending and earnings change for monthlyData
+  const handleMonthlyValueChange = (index, field, value) => {
+    const numValue = parseInt(value) || 0;
+    setMonthlyData(prev => {
+      const copy = [...prev];
+      copy[index] = {
+        ...copy[index],
+        [field]: numValue,
+        profit: field === 'spending' ? copy[index].earnings - numValue : numValue - copy[index].spending,
+      };
+      return copy;
+    });
+  };
+
+  // Handle editable expense category amount change
+  const handleExpenseAmountChange = (index, value) => {
+    const numValue = parseInt(value) || 0;
+    setExpenseBreakdown(prev => {
+      const copy = [...prev];
+      copy[index] = {
+        ...copy[index],
+        amount: numValue,
+      };
+      // Recalculate value % based on updated total
+      const totalAmt = copy.reduce((sum, i) => sum + i.amount, 0) || 1;
+      return copy.map(i => ({
+        ...i,
+        value: (i.amount / totalAmt) * 100,
+      }));
+    });
+  };
+
+  // Add new expense category
+  const handleAddExpense = () => {
+    if (!newExpenseName.trim()) return;
+    const amountNum = parseInt(newExpenseAmount);
+    if (isNaN(amountNum) || amountNum <= 0) return;
+
+    setExpenseBreakdown(prev => {
+      const newList = [...prev, { name: newExpenseName.trim(), amount: amountNum, value: 0 }];
+      const totalAmt = newList.reduce((sum, i) => sum + i.amount, 0);
+      return newList.map(i => ({ ...i, value: (i.amount / totalAmt) * 100 }));
+    });
+    setNewExpenseName('');
+    setNewExpenseAmount('');
+  };
+
+  // Calculate total spending: sum of selected months + sum of expense categories
+  const totalSpendingOnMonths = monthlyData.reduce((sum, item) => sum + item.spending, 0);
+  const totalExpenseAmount = expenseBreakdown.reduce((sum, item) => sum + item.amount, 0);
+  const totalSpending = totalSpendingOnMonths + totalExpenseAmount;
+
+  // Similarly total earnings and profit margin
   const totalEarnings = monthlyData.reduce((sum, item) => sum + item.earnings, 0);
   const totalProfit = totalEarnings - totalSpending;
-  const profitMargin = ((totalProfit / totalEarnings) * 100).toFixed(1);
+  const profitMargin = totalEarnings ? ((totalProfit / totalEarnings) * 100).toFixed(1) : '0.0';
 
+  // Government schemes & investments (same logic as before)
   const governmentSchemes = [
     {
       id: 1,
@@ -117,7 +212,6 @@ const Analytics = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/30 to-farming-earth/20 p-4">
       <div className="max-w-7xl mx-auto space-y-6">
-        
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
@@ -129,7 +223,6 @@ const Analytics = () => {
               <p className="text-muted-foreground">Track your farm's financial performance</p>
             </div>
           </div>
-          
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="w-48">
               <Calendar className="w-4 h-4 mr-2" />
@@ -142,6 +235,53 @@ const Analytics = () => {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Editable Monthly Data Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Financial Data</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr>
+                  <th className="p-2 border-b">Month</th>
+                  <th className="p-2 border-b">Spending (₹)</th>
+                  <th className="p-2 border-b">Earnings (₹)</th>
+                  <th className="p-2 border-b">Profit (₹)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {monthlyData.map((item, i) => (
+                  <tr key={item.month} className="border-b">
+                    <td className="p-2">{item.month}</td>
+                    <td className="p-2">
+                      <input
+                        type="number"
+                        min="0"
+                        value={item.spending}
+                        onChange={(e) => handleMonthlyValueChange(i, 'spending', e.target.value)}
+                        className="w-full border rounded px-2 py-1"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="number"
+                        min="0"
+                        value={item.earnings}
+                        onChange={(e) => handleMonthlyValueChange(i, 'earnings', e.target.value)}
+                        className="w-full border rounded px-2 py-1"
+                      />
+                    </td>
+                    <td className={`p-2 font-semibold text-right ${item.profit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      {item.profit.toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -206,12 +346,20 @@ const Analytics = () => {
           </Card>
         </div>
 
-        {/* Profit/Loss Trend */}
+        {/* Financial Trend */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <BarChart3 className="w-5 h-5" />
-              <span>Financial Trend (Last 6 Months)</span>
+              <span>
+                Financial Trend (
+                {selectedPeriod === '1year'
+                  ? 'Last 12 Months'
+                  : selectedPeriod === '6months'
+                    ? 'Last 6 Months'
+                    : 'Last 3 Months'}
+                )
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -229,109 +377,151 @@ const Analytics = () => {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Expense Breakdown */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Expense Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={expenseBreakdown}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {expenseBreakdown.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value, name) => [`${value}%`, name]} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="mt-4 space-y-2">
-                {expenseBreakdown.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: COLORS[index] }}
-                      ></div>
-                      <span className="text-sm">{item.name}</span>
-                    </div>
-                    <span className="text-sm font-medium">₹{item.amount.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Expense Breakdown with Editable amounts */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Expense Breakdown</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={expenseBreakdown}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {expenseBreakdown.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={value => [`${value.toFixed(1)}%`]} />
+              </PieChart>
+            </ResponsiveContainer>
 
-          {/* Recommendations */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                {totalProfit >= 0 ? (
-                  <PiggyBank className="w-5 h-5 text-success" />
-                ) : (
-                  <AlertCircle className="w-5 h-5 text-warning" />
-                )}
-                <span>
-                  {totalProfit >= 0 ? 'Investment Opportunities' : 'Recovery Strategies'}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {totalProfit >= 0 ? (
-                  investmentOptions.map((option, index) => (
-                    <div key={index} className={`p-4 rounded-lg border ${option.recommended ? 'bg-success/5 border-success/20' : 'bg-muted/30'}`}>
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-semibold">{option.name}</h4>
-                        {option.recommended && (
-                          <Badge variant="secondary" className="bg-success/20 text-success">
-                            Recommended
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <p><span className="text-muted-foreground">Cost:</span> {option.cost}</p>
-                        <p><span className="text-muted-foreground">Subsidy:</span> {option.subsidy}</p>
-                        <p><span className="text-muted-foreground">Payback:</span> {option.payback}</p>
-                        <p><span className="text-muted-foreground">Benefit:</span> {option.benefit}</p>
-                      </div>
+            <div className="mt-4 space-y-2">
+              {expenseBreakdown.map((item, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: COLORS[index] }}
+                    ></div>
+                    <span className="text-sm">{item.name}</span>
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    value={item.amount}
+                    onChange={(e) => handleExpenseAmountChange(index, e.target.value)}
+                    className="w-24 border rounded px-2 py-1 text-right"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Add New Expense */}
+            <div className="mt-6 space-y-2">
+              <h4 className="font-semibold">Add New Expense</h4>
+              <input
+                type="text"
+                placeholder="Expense Name"
+                value={newExpenseName}
+                onChange={(e) => setNewExpenseName(e.target.value)}
+                className="border rounded px-3 py-2 w-full"
+              />
+              <input
+                type="number"
+                min="0"
+                placeholder="Amount (₹)"
+                value={newExpenseAmount}
+                onChange={(e) => setNewExpenseAmount(e.target.value)}
+                className="border rounded px-3 py-2 w-full"
+              />
+              <Button
+                onClick={handleAddExpense}
+                disabled={!newExpenseName.trim() || !newExpenseAmount}
+              >
+                Add Expense
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recommendations */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              {totalProfit >= 0 ? (
+                <PiggyBank className="w-5 h-5 text-success" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-warning" />
+              )}
+              <span>{totalProfit >= 0 ? 'Investment Opportunities' : 'Recovery Strategies'}</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {totalProfit >= 0 ? (
+                investmentOptions.map((option, index) => (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-lg border ${
+                      option.recommended ? 'bg-success/5 border-success/20' : 'bg-muted/30'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold">{option.name}</h4>
+                      {option.recommended && (
+                        <Badge variant="secondary" className="bg-success/20 text-success">
+                          Recommended
+                        </Badge>
+                      )}
                     </div>
-                  ))
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex items-start space-x-3 p-3 bg-warning/10 rounded-lg">
-                      <Info className="w-5 h-5 text-warning mt-0.5" />
-                      <div>
-                        <p className="font-medium">Loss Recovery Strategy</p>
-                        <p className="text-sm text-muted-foreground">
-                          Focus on cost reduction and explore government schemes for financial support.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="font-medium">Immediate Actions:</p>
-                      <ul className="text-sm space-y-1 ml-4">
-                        <li>• Apply for Kisan Credit Card for immediate credit access</li>
-                        <li>• Get soil testing done to optimize fertilizer usage</li>
-                        <li>• Consider crop insurance for next season</li>
-                        <li>• Explore contract farming opportunities</li>
-                      </ul>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <p>
+                        <span className="text-muted-foreground">Cost:</span> {option.cost}
+                      </p>
+                      <p>
+                        <span className="text-muted-foreground">Subsidy:</span> {option.subsidy}
+                      </p>
+                      <p>
+                        <span className="text-muted-foreground">Payback:</span> {option.payback}
+                      </p>
+                      <p>
+                        <span className="text-muted-foreground">Benefit:</span> {option.benefit}
+                      </p>
                     </div>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                ))
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3 p-3 bg-warning/10 rounded-lg">
+                    <Info className="w-5 h-5 text-warning mt-0.5" />
+                    <div>
+                      <p className="font-medium">Loss Recovery Strategy</p>
+                      <p className="text-sm text-muted-foreground">
+                        Focus on cost reduction and explore government schemes for financial support.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="font-medium">Immediate Actions:</p>
+                    <ul className="text-sm space-y-1 ml-4">
+                      <li>• Apply for Kisan Credit Card for immediate credit access</li>
+                      <li>• Get soil testing done to optimize fertilizer usage</li>
+                      <li>• Consider crop insurance for next season</li>
+                      <li>• Explore contract farming opportunities</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Government Schemes */}
         <Card>
@@ -346,18 +536,21 @@ const Analytics = () => {
                     <h4 className="font-semibold">{scheme.name}</h4>
                     <Badge variant="outline">{scheme.type}</Badge>
                   </div>
-                  
+
                   <p className="text-sm text-muted-foreground">{scheme.description}</p>
-                  
+
                   <div className="space-y-1 text-sm">
-                    <p><span className="font-medium">Eligibility:</span> {scheme.eligibility}</p>
-                    <p><span className="font-medium">Status:</span> 
+                    <p>
+                      <span className="font-medium">Eligibility:</span> {scheme.eligibility}
+                    </p>
+                    <p>
+                      <span className="font-medium">Status:</span>
                       <Badge variant="secondary" className="ml-2 bg-primary/20 text-primary">
                         {scheme.applicable}
                       </Badge>
                     </p>
                   </div>
-                  
+
                   <Button variant="outline" size="sm" className="w-full" asChild>
                     <a href={scheme.link} target="_blank" rel="noopener noreferrer">
                       Learn More <ExternalLink className="w-3 h-3 ml-2" />

@@ -2,16 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { 
-  Sun, 
-  Cloud, 
-  CloudRain, 
-  Wind, 
-  Thermometer,
-  Droplets,
-  Eye,
-  Calendar
-} from "lucide-react";
+import { Sun, Cloud, CloudRain, Wind, Thermometer, Droplets, Eye, Calendar } from "lucide-react";
 
 interface WeatherWidgetProps {
   onWeatherUpdate?: (weather: { condition: string; description: string }) => void;
@@ -22,6 +13,11 @@ const WeatherWidget = ({ onWeatherUpdate }: WeatherWidgetProps) => {
 
   const [currentWeather, setCurrentWeather] = useState<any>(null);
   const [weeklyForecast, setWeeklyForecast] = useState<any[]>([]);
+  const [location, setLocation] = useState<{ latitude: number | null; longitude: number | null; error: string | null }>({
+    latitude: null,
+    longitude: null,
+    error: null,
+  });
 
   const getWeatherIcon = (condition: string) => {
     switch (condition.toLowerCase()) {
@@ -40,11 +36,41 @@ const WeatherWidget = ({ onWeatherUpdate }: WeatherWidgetProps) => {
     }
   };
 
+  const getLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            error: null,
+          });
+        },
+        (error) => {
+          setLocation({ latitude: null, longitude: null, error: error.message });
+        }
+      );
+    } else {
+      setLocation({ latitude: null, longitude: null, error: "Geolocation not supported" });
+    }
+  };
+
+  // Get location on page load
+  useEffect(() => {
+    getLocation();
+  }, []);
+
+  // Fetch weather whenever location updates
+  useEffect(() => {
+    if (location.latitude && location.longitude) {
+      fetchWeather();
+    }
+  }, [location.latitude, location.longitude]);
+
   const fetchWeather = async () => {
     try {
-      // Current weather
       const res = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=Gwalior,IN&units=metric&appid=${API_KEY}`
+        `https://api.openweathermap.org/data/2.5/weather?lat=${location.latitude}&lon=${location.longitude}&appid=${API_KEY}&units=metric`
       );
       const data = await res.json();
 
@@ -70,7 +96,7 @@ const WeatherWidget = ({ onWeatherUpdate }: WeatherWidgetProps) => {
 
       // 7-day forecast (3-hour interval → pick 1 per day)
       const forecastRes = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=Gwalior,IN&units=metric&appid=${API_KEY}`
+        `https://api.openweathermap.org/data/2.5/forecast?lat=${location.latitude}&lon=${location.longitude}&units=metric&appid=${API_KEY}`
       );
       const forecastData = await forecastRes.json();
 
@@ -90,12 +116,12 @@ const WeatherWidget = ({ onWeatherUpdate }: WeatherWidgetProps) => {
     }
   };
 
-  useEffect(() => {
-    fetchWeather();
-  }, []);
+  if (location.error) {
+    return <p className="text-red-500">Error: {location.error}</p>;
+  }
 
-  if (!currentWeather) {
-    return <p className="text-muted-foreground">Loading weather...</p>;
+  if (!location.latitude || !location.longitude || !currentWeather) {
+    return <p className="text-muted-foreground">Fetching location and weather...</p>;
   }
 
   return (
@@ -148,6 +174,7 @@ const WeatherWidget = ({ onWeatherUpdate }: WeatherWidgetProps) => {
             <div>
               <p className="text-3xl font-bold">{currentWeather.temperature}</p>
               <p className="text-muted-foreground">{currentWeather.condition}</p>
+              <p className="text-sm text-muted-foreground">Location: {location.latitude.toFixed(2)}, {location.longitude.toFixed(2)}</p>
             </div>
           </div>
 
